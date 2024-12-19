@@ -29,13 +29,9 @@ string lexer::tokenTypeToString(TokenType t)
     }
 }
 
-void lexer::tokenize(){
-    string mOperation;
+std::vector<Token> lexer::tokenize(std::string operation){
     vector<Token> tokens;
-    while (true)
-    {
-        cin >> mOperation;
-        for (char c : mOperation)
+        for (char c : operation)
         {
             if (isspace(c))
                 continue;
@@ -56,12 +52,12 @@ void lexer::tokenize(){
             default:
                 if(isdigit(c)){
                     tokens.push_back({TokenType::NUMBER, c});
-                    break;
-                } else {
-                     printVector(tokens);
-                    break;
                 }
+                break;
             }
         }
-    }
+    
+    printVector(tokens);
+
+    return tokens;
 }

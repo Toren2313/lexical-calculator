@@ -12,6 +12,6 @@ private:
 void printVector(std::vector<Token> v);
 std::string tokenTypeToString(TokenType t);
 public:
-    void tokenize();
+    std::vector<Token> tokenize(std::string operation);
 };
 
