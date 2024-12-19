@@ -1,10 +1,12 @@
 #pragma once
 
-enum class TokenType
-{
+enum class TokenType {
     PLUS = '+',
     MINUS = '-',
     MULTIPLICATION = '*',
     DIVIDE = '/',
-    NUMBER
+    POWER = '^',
+    PERCENT = '%',
+    NUMBER,
+    RESULT
 };

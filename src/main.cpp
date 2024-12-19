@@ -1,7 +1,7 @@
 #include <iostream>
+#include <regex>
 #include <string>
 #include <vector>
-#include <regex>
 
 #include "./viewModels/Types/enums.h"
 #include "./viewModels/Types/structs.h"
@@ -10,16 +10,13 @@
 
 using namespace std;
 
-int main()
-{
+int main() {
     string mOperation;
     lexer l;
 
-    while (true)
-    {
+    while (true) {
         cin >> mOperation;
 
         l.tokenize(mOperation);
     }
-
 }

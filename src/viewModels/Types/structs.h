@@ -1,8 +1,7 @@
 #pragma once
 #include "enums.h"
 
-struct Token
-{
+struct Token {
     TokenType token;
     char value;
 };
