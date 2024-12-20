@@ -30,8 +30,9 @@ string lexer::tokenTypeToString(TokenType t) {
 }
 
 std::vector<Token> lexer::tokenize(std::string operation) {
-    vector<Token> tokens;
-    string currentNumber;
+    std::vector<Token> tokens;
+    std::string currentNumber;
+
     for (char c : operation) {
         if (isspace(c)) {
             continue;
@@ -39,47 +40,46 @@ std::vector<Token> lexer::tokenize(std::string operation) {
             currentNumber += c;
         } else {
             if (!currentNumber.empty()) {
-                for (char digit : currentNumber) {
-                    tokens.push_back({TokenType::NUMBER, digit});
-                }
+                tokens.push_back({TokenType::NUMBER, currentNumber});
                 currentNumber.clear();
             }
             switch (c) {
+            case 'x':
+#if defined(_WIN32) || defined(_WIN64)
+                system("cls");
+#else
+                system("clear");
+#endif
+                break;
             case '+':
-                tokens.push_back({TokenType::PLUS, c});
+                tokens.push_back({TokenType::PLUS, std::string(1, c)});
                 break;
             case '-':
-                tokens.push_back({TokenType::MINUS, c});
+                tokens.push_back({TokenType::MINUS, std::string(1, c)});
                 break;
             case '*':
-                tokens.push_back({TokenType::MULTIPLICATION, c});
+                tokens.push_back({TokenType::MULTIPLICATION, std::string(1, c)});
                 break;
             case '/':
-                tokens.push_back({TokenType::DIVIDE, c});
+                tokens.push_back({TokenType::DIVIDE, std::string(1, c)});
                 break;
             case '^':
-                tokens.push_back({TokenType::POWER, c});
+                tokens.push_back({TokenType::POWER, std::string(1, c)});
                 break;
             case '%':
-                tokens.push_back({TokenType::PERCENT, c});
+                tokens.push_back({TokenType::PERCENT, std::string(1, c)});
                 break;
             default:
-                if (isdigit(c)) {
-                    tokens.push_back({TokenType::NUMBER, c});
-                }
                 break;
             }
         }
     }
 
     if (!currentNumber.empty()) {
-        for (char digit : currentNumber) {
-            tokens.push_back({TokenType::NUMBER, digit});
-        }
+        tokens.push_back({TokenType::NUMBER, currentNumber});
     }
 
     printVector(tokens);
-
     return tokens;
 }
 
@@ -90,7 +90,8 @@ int lexer::calculate(std::vector<Token> tokens) {
 
     for (Token &t : tokens) {
         if (t.token == TokenType::NUMBER) {
-            currentNumber = currentNumber * 10 + (t.value - '0'); // char -> int
+            // currentNumber = currentNumber * 10 + (t.value - '0'); // char -> int
+            to_string(currentNumber);
         } else {
             switch (lastOperator) {
             case TokenType::PLUS:
