@@ -6,17 +6,17 @@
 #include "./viewModels/Types/enums.h"
 #include "./viewModels/Types/structs.h"
 
-#include "./viewModels/Tokenizer/lexer.h"
+#include "./viewModels/Lexer/lexer.h"
 
 using namespace std;
 
 int main() {
     string mOperation;
-    lexer l;
 
     while (true) {
-        cin >> mOperation;
+        cout << ">> ";
+        getline(cin, mOperation);
 
-        l.tokenize(mOperation);
+        Lexer l(mOperation, true);
     }
 }

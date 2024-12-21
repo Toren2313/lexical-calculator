@@ -2,13 +2,23 @@
 
 using namespace std;
 
-void lexer::printVector(vector<Token> v) {
-    for (Token &t : v) {
-        cout << tokenTypeToString(t.token) + ": " << t.value << endl;
+Lexer::Lexer(string operation, bool debugMode) {
+    this->tokens = this->tokenize(operation);
+    if (this->syntaxAnalyzer() == false) {
+        throw runtime_error("invalid syntax.");
+    }
+    if (debugMode) {
+        this->printVector();
+
+        cout << "Debug: Lexer constructor finished." << endl;
+    }
+};
+void Lexer::printVector() {
+    for (Token &t : this->tokens) {
+        cout << this->tokenTypeToString(t.token) + ": " << t.value << endl;
     }
 }
-
-string lexer::tokenTypeToString(TokenType t) {
+string Lexer::tokenTypeToString(TokenType t) {
     switch (t) {
     case TokenType::PLUS:
         return "PLUS";
@@ -28,29 +38,23 @@ string lexer::tokenTypeToString(TokenType t) {
         return "invalid";
     }
 }
+std::vector<Token> Lexer::tokenize(std::string operation) {
 
-std::vector<Token> lexer::tokenize(std::string operation) {
-    std::vector<Token> tokens;
     std::string currentNumber;
+    vector<Token> tokens;
 
     for (char c : operation) {
         if (isspace(c)) {
             continue;
         } else if (isdigit(c)) {
             currentNumber += c;
+            continue;
         } else {
             if (!currentNumber.empty()) {
                 tokens.push_back({TokenType::NUMBER, currentNumber});
                 currentNumber.clear();
             }
             switch (c) {
-            case 'x':
-#if defined(_WIN32) || defined(_WIN64)
-                system("cls");
-#else
-                system("clear");
-#endif
-                break;
             case '+':
                 tokens.push_back({TokenType::PLUS, std::string(1, c)});
                 break;
@@ -69,6 +73,13 @@ std::vector<Token> lexer::tokenize(std::string operation) {
             case '%':
                 tokens.push_back({TokenType::PERCENT, std::string(1, c)});
                 break;
+            case 'x':
+#if defined(_WIN32) || defined(_WIN64)
+                system("cls");
+#else
+                system("clear");
+#endif
+                break;
             default:
                 break;
             }
@@ -79,11 +90,44 @@ std::vector<Token> lexer::tokenize(std::string operation) {
         tokens.push_back({TokenType::NUMBER, currentNumber});
     }
 
-    printVector(tokens);
     return tokens;
 }
+bool Lexer::syntaxAnalyzer() {
+    if (this->tokens.empty())
+        return false;
 
-int lexer::calculate(std::vector<Token> tokens) {
+    bool expectingNumber = true;
+
+    vector<TokenType> types = {TokenType::PLUS,   TokenType::MINUS,   TokenType::MULTIPLICATION,
+                               TokenType::DIVIDE, TokenType::PERCENT, TokenType::POWER};
+
+    for (Token &t : this->tokens) {
+        if (t.token == TokenType::NUMBER && expectingNumber) {
+            expectingNumber = false;
+        } else if (std::find(types.begin(), types.end(), t.token) != types.end() && !expectingNumber) {
+            expectingNumber = true;
+        } else {
+            return false;
+        }
+    }
+    if (expectingNumber) {
+        return false;
+    }
+    return true;
+}
+
+/*
+int Lexer::calculate(std::vector<Token> tokens) {
+    if (tokens.empty()) {
+        cout << "no aritmetic operation found.";
+        exit(-1);
+    }
+
+    if (!this->syntaxAnalyzer(tokens)) {
+        cout << "invalid syntax." << endl;
+        exit(-1);
+    }
+
     int result = 0;
     int currentNumber = 0;
     TokenType lastOperator = TokenType::PLUS;
@@ -143,3 +187,4 @@ int lexer::calculate(std::vector<Token> tokens) {
 
     return result;
 }
+*/
