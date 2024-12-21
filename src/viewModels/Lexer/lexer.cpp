@@ -5,7 +5,7 @@ using namespace std;
 Lexer::Lexer(string operation, bool debugMode) {
     this->tokens = this->tokenize(operation);
     if (this->syntaxAnalyzer() == false) {
-        throw runtime_error("invalid syntax.");
+        throw runtime_error("invalid syntax");
     }
     if (debugMode) {
         this->printVector();
@@ -45,10 +45,13 @@ std::vector<Token> Lexer::tokenize(std::string operation) {
 
     for (char c : operation) {
         if (isspace(c)) {
+            if (!currentNumber.empty()) {
+                tokens.push_back({TokenType::NUMBER, currentNumber});
+                currentNumber.clear();
+            }
             continue;
         } else if (isdigit(c)) {
             currentNumber += c;
-            continue;
         } else {
             if (!currentNumber.empty()) {
                 tokens.push_back({TokenType::NUMBER, currentNumber});
@@ -102,6 +105,7 @@ bool Lexer::syntaxAnalyzer() {
                                TokenType::DIVIDE, TokenType::PERCENT, TokenType::POWER};
 
     for (Token &t : this->tokens) {
+
         if (t.token == TokenType::NUMBER && expectingNumber) {
             expectingNumber = false;
         } else if (std::find(types.begin(), types.end(), t.token) != types.end() && !expectingNumber) {
