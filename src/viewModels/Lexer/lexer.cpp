@@ -4,14 +4,14 @@ using namespace std;
 
 Lexer::Lexer(string operation, bool debugMode) {
     this->tokens = this->tokenize(operation);
-    if (this->syntaxAnalyzer() == false) {
+    if (this->syntaxAnalyzer() == false)
         throw runtime_error("invalid syntax");
-    }
-    if (debugMode) {
+    if (debugMode)
         this->printVector();
 
-        cout << "Debug: Lexer constructor finished." << endl;
-    }
+       this->tokensRPN = this->inFixToRPN();
+
+    // cout << "Result is: " << r << endl;
 };
 void Lexer::printVector() {
     for (Token &t : this->tokens) {
@@ -20,26 +20,17 @@ void Lexer::printVector() {
 }
 string Lexer::tokenTypeToString(TokenType t) {
     switch (t) {
-    case TokenType::PLUS:
-        return "PLUS";
-    case TokenType::MINUS:
-        return "MINUS";
-    case TokenType::MULTIPLICATION:
-        return "MULTIPLICATION";
-    case TokenType::DIVIDE:
-        return "DIVIDE";
-    case TokenType::POWER:
-        return "POWER";
-    case TokenType::PERCENT:
-        return "PERCENT";
+    case TokenType::_OPERATOR:
+        return "OPERATOR";
     case TokenType::NUMBER:
         return "NUMBER";
+    case TokenType::RESULT:
+        return "RESULT";
     default:
         return "invalid";
     }
 }
 std::vector<Token> Lexer::tokenize(std::string operation) {
-
     std::string currentNumber;
     vector<Token> tokens;
 
@@ -59,23 +50,16 @@ std::vector<Token> Lexer::tokenize(std::string operation) {
             }
             switch (c) {
             case '+':
-                tokens.push_back({TokenType::PLUS, std::string(1, c)});
-                break;
             case '-':
-                tokens.push_back({TokenType::MINUS, std::string(1, c)});
-                break;
             case '*':
-                tokens.push_back({TokenType::MULTIPLICATION, std::string(1, c)});
-                break;
             case '/':
-                tokens.push_back({TokenType::DIVIDE, std::string(1, c)});
-                break;
             case '^':
-                tokens.push_back({TokenType::POWER, std::string(1, c)});
+            case '(':
+            case ')': {
+                tokens.push_back({TokenType::_OPERATOR, std::string(1, c)});
                 break;
-            case '%':
-                tokens.push_back({TokenType::PERCENT, std::string(1, c)});
-                break;
+            }
+
             case 'x':
 #if defined(_WIN32) || defined(_WIN64)
                 system("cls");
@@ -95,20 +79,66 @@ std::vector<Token> Lexer::tokenize(std::string operation) {
 
     return tokens;
 }
+
+int precedence(string t) {
+    if (t == "+" || t == "-")
+        return 0;
+    if (t == "*" || t == "/")
+        return 1;
+    if (t == "^" || t == "%")
+        return 2;
+    if (t == "(" || t == ")")
+        return 3;
+
+    return -1;
+}
+
+vector<Token> Lexer::inFixToRPN() {
+    vector<Token> output;
+    stack<string> ops;
+    for (Token &t : this->tokens) {
+        if (t.token == TokenType::NUMBER)
+            output.push_back({TokenType::_OPERATOR, t.value});
+        else if (t.token == TokenType::_OPERATOR && t.value == "(")
+            ops.push(t.value);
+        else if (t.token == TokenType::_OPERATOR && t.value == ")") {
+            while (ops.top() != "(") {
+                output.push_back({TokenType::_OPERATOR, ops.top()});
+                ops.pop();
+            }
+            ops.pop();
+
+        } else if (t.token == TokenType::_OPERATOR) {
+            while (!ops.empty() && precedence(t.value) <= precedence(ops.top())) {
+                output.push_back({TokenType::_OPERATOR, ops.top()});
+                ops.pop();
+            }
+            ops.push(t.value);
+        }
+    }
+    while (!ops.empty()) {
+        output.push_back({TokenType::_OPERATOR, ops.top()});
+        ops.pop();
+    }
+
+    for (auto &v : output) {
+        cout << v.value << endl;
+    }
+
+    return output;
+}
+
 bool Lexer::syntaxAnalyzer() {
     if (this->tokens.empty())
         return false;
 
     bool expectingNumber = true;
 
-    vector<TokenType> types = {TokenType::PLUS,   TokenType::MINUS,   TokenType::MULTIPLICATION,
-                               TokenType::DIVIDE, TokenType::PERCENT, TokenType::POWER};
-
     for (Token &t : this->tokens) {
 
         if (t.token == TokenType::NUMBER && expectingNumber) {
             expectingNumber = false;
-        } else if (std::find(types.begin(), types.end(), t.token) != types.end() && !expectingNumber) {
+        } else if (t.token == TokenType::_OPERATOR && !expectingNumber) {
             expectingNumber = true;
         } else {
             return false;
@@ -120,6 +150,45 @@ bool Lexer::syntaxAnalyzer() {
     return true;
 }
 
+int Lexer::evalRPN() {
+    stack<int> rpnStack;
+    int result;
+
+    for (Token &t : this->tokens) {
+        if (t.token == TokenType::NUMBER) {
+            cout << "pushed: " << t.value << endl;
+            rpnStack.push(stoi(t.value));
+        } else {
+            int b = rpnStack.top();
+            rpnStack.pop();
+            int a = rpnStack.top();
+            rpnStack.pop();
+
+            if (t.value == "+") {
+                result = a + b;
+            } else if (t.value == "-") {
+                result = a - b;
+
+            } else if (t.value == "*") {
+                result = a * b;
+
+            } else if (t.value == "/") {
+                if (b == 0) {
+                    throw runtime_error("Division by zero");
+                }
+                result = a / b;
+
+            } else if (t.value == "^") {
+                result = pow(a, b);
+            } else if (t.value == "%") {
+                result = a % b;
+            }
+            rpnStack.push(result);
+        }
+    }
+
+    return rpnStack.top();
+}
 /*
 int Lexer::calculate(std::vector<Token> tokens) {
     if (tokens.empty()) {
