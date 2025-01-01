@@ -1,4 +1,5 @@
 #include "./lexer.h"
+#include "../../main.cpp"
 
 using namespace std;
 
@@ -62,10 +63,13 @@ std::vector<Token> Lexer::tokenize(std::string operation) {
             }
 
             case 'x':
-#if defined(_WIN32) || defined(_WIN64)
+#ifdef _WIN32
                 system("cls");
+                main();
+
 #else
                 system("clear");
+                main();
 #endif
                 break;
             default:
