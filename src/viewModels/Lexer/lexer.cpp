@@ -9,9 +9,9 @@ Lexer::Lexer(string operation, bool debugMode) {
     if (debugMode)
         this->printVector();
 
-       this->tokensRPN = this->inFixToRPN();
+    int r = this->evalRPN(inFixToRPN());
 
-    // cout << "Result is: " << r << endl;
+    cout << "Result is: " << r << endl;
 };
 void Lexer::printVector() {
     for (Token &t : this->tokens) {
@@ -54,6 +54,7 @@ std::vector<Token> Lexer::tokenize(std::string operation) {
             case '*':
             case '/':
             case '^':
+            case '%':
             case '(':
             case ')': {
                 tokens.push_back({TokenType::_OPERATOR, std::string(1, c)});
@@ -83,9 +84,9 @@ std::vector<Token> Lexer::tokenize(std::string operation) {
 int precedence(string t) {
     if (t == "+" || t == "-")
         return 0;
-    if (t == "*" || t == "/")
+    if (t == "*" || t == "/" || t == "%")
         return 1;
-    if (t == "^" || t == "%")
+    if (t == "^")
         return 2;
     if (t == "(" || t == ")")
         return 3;
@@ -98,18 +99,19 @@ vector<Token> Lexer::inFixToRPN() {
     stack<string> ops;
     for (Token &t : this->tokens) {
         if (t.token == TokenType::NUMBER)
-            output.push_back({TokenType::_OPERATOR, t.value});
-        else if (t.token == TokenType::_OPERATOR && t.value == "(")
-            ops.push(t.value);
-        else if (t.token == TokenType::_OPERATOR && t.value == ")") {
-            while (ops.top() != "(") {
+            output.push_back({TokenType::NUMBER, t.value});
+        else if (t.value == "(") {
+            ops.push("(");
+        } else if (t.value == ")") {
+            while (!ops.empty() && ops.top() != "(") {
                 output.push_back({TokenType::_OPERATOR, ops.top()});
                 ops.pop();
             }
-            ops.pop();
-
-        } else if (t.token == TokenType::_OPERATOR) {
-            while (!ops.empty() && precedence(t.value) <= precedence(ops.top())) {
+            if (!ops.empty()) {
+                ops.pop();
+            }
+        } else {
+            while (!ops.empty() && precedence(t.value) <= precedence(ops.top()) && ops.top() != "(") {
                 output.push_back({TokenType::_OPERATOR, ops.top()});
                 ops.pop();
             }
@@ -129,14 +131,24 @@ vector<Token> Lexer::inFixToRPN() {
 }
 
 bool Lexer::syntaxAnalyzer() {
+    stack<string> stack;
     if (this->tokens.empty())
         return false;
 
     bool expectingNumber = true;
 
     for (Token &t : this->tokens) {
-
-        if (t.token == TokenType::NUMBER && expectingNumber) {
+        if (t.value == "(") {
+            stack.push(t.value);
+            expectingNumber = true;
+        } else if (t.value == ")") {
+            if (stack.empty()) {
+                cout << "empty" << endl;
+                return false;
+            }
+            stack.pop();
+            expectingNumber = false;
+        } else if (t.token == TokenType::NUMBER && expectingNumber) {
             expectingNumber = false;
         } else if (t.token == TokenType::_OPERATOR && !expectingNumber) {
             expectingNumber = true;
@@ -144,19 +156,20 @@ bool Lexer::syntaxAnalyzer() {
             return false;
         }
     }
-    if (expectingNumber) {
+    if (!stack.empty())
         return false;
-    }
+    if (expectingNumber)
+        return false;
+
     return true;
 }
 
-int Lexer::evalRPN() {
+int Lexer::evalRPN(std::vector<Token> tokensInRPN) {
     stack<int> rpnStack;
     int result;
 
-    for (Token &t : this->tokens) {
+    for (Token &t : tokensInRPN) {
         if (t.token == TokenType::NUMBER) {
-            cout << "pushed: " << t.value << endl;
             rpnStack.push(stoi(t.value));
         } else {
             int b = rpnStack.top();
@@ -189,75 +202,3 @@ int Lexer::evalRPN() {
 
     return rpnStack.top();
 }
-/*
-int Lexer::calculate(std::vector<Token> tokens) {
-    if (tokens.empty()) {
-        cout << "no aritmetic operation found.";
-        exit(-1);
-    }
-
-    if (!this->syntaxAnalyzer(tokens)) {
-        cout << "invalid syntax." << endl;
-        exit(-1);
-    }
-
-    int result = 0;
-    int currentNumber = 0;
-    TokenType lastOperator = TokenType::PLUS;
-
-    for (Token &t : tokens) {
-        if (t.token == TokenType::NUMBER) {
-            // currentNumber = currentNumber * 10 + (t.value - '0'); // char -> int
-            to_string(currentNumber);
-        } else {
-            switch (lastOperator) {
-            case TokenType::PLUS:
-                result += currentNumber;
-                break;
-            case TokenType::MINUS:
-                result -= currentNumber;
-                break;
-            case TokenType::MULTIPLICATION:
-                result *= currentNumber;
-                break;
-            case TokenType::DIVIDE:
-                if (currentNumber != 0) {
-                    result /= currentNumber;
-                } else {
-                    cout << "err: divide by 0" << endl;
-                    return 0;
-                }
-                break;
-            default:
-                break;
-            }
-            lastOperator = t.token;
-            currentNumber = 0;
-        }
-    }
-
-    switch (lastOperator) {
-    case TokenType::PLUS:
-        result += currentNumber;
-        break;
-    case TokenType::MINUS:
-        result -= currentNumber;
-        break;
-    case TokenType::MULTIPLICATION:
-        result *= currentNumber;
-        break;
-    case TokenType::DIVIDE:
-        if (currentNumber != 0) {
-            result /= currentNumber;
-        } else {
-            cout << "err: divide by 0" << endl;
-            return 0;
-        }
-        break;
-    default:
-        break;
-    }
-
-    return result;
-}
-*/

@@ -1,6 +1,16 @@
 cmake_minimum_required(VERSION 3.29)
 project(lexical_calculator)
 
+#[===[
+
+set(CMAKE_BUILD_TYPE Debug)
+set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -g -O0")
+
+odkomentuj te dwie linie jak bedziesz mial jakis trudny do odczytania blad,
+i uzyj debbugera (gdb albo valgrind najlepiej) ~ Przemek
+
+]===]
+
 file(GLOB_RECURSE lexical_calculator_SOURCES CONFIGURE_DEPENDS "src/*.cpp")
 file(GLOB_RECURSE lexical_calculator_HEADERS CONFIGURE_DEPENDS "src/*.h")
 set(lexical_calculator_INCLUDE_DIRS "")
