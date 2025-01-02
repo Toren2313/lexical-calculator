@@ -7,16 +7,22 @@ Lexer::Lexer(string operation, bool debugMode) {
     this->tokens = this->tokenize(operation);
     if (this->syntaxAnalyzer() == false)
         throw runtime_error("invalid syntax");
+
+    this->tokensRPN = inFixToRPN();
+
+    int r = this->evalRPN(this->tokensRPN);
+
     if (debugMode)
         this->printVector();
-
-    int r = this->evalRPN(inFixToRPN());
 
     cout << "Result is: " << r << endl;
 };
 void Lexer::printVector() {
     for (Token &t : this->tokens) {
         cout << this->tokenTypeToString(t.token) + ": " << t.value << endl;
+    }
+    for (auto &t : this->tokensRPN) {
+        cout << t.value << endl;
     }
 }
 string Lexer::tokenTypeToString(TokenType t) {
@@ -125,10 +131,6 @@ vector<Token> Lexer::inFixToRPN() {
     while (!ops.empty()) {
         output.push_back({TokenType::_OPERATOR, ops.top()});
         ops.pop();
-    }
-
-    for (auto &v : output) {
-        cout << v.value << endl;
     }
 
     return output;
