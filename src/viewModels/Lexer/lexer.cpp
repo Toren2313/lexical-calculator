@@ -10,7 +10,7 @@ Lexer::Lexer(string operation, bool debugMode) {
 
     this->tokensRPN = inFixToRPN();
 
-    int r = this->evalRPN(this->tokensRPN);
+    double r = this->evalRPN(this->tokensRPN);
 
     if (debugMode)
         this->printVector();
@@ -39,21 +39,26 @@ string Lexer::tokenTypeToString(TokenType t) {
 }
 std::vector<Token> Lexer::tokenize(std::string operation) {
     std::string currentNumber;
+    bool hasDecimalPoint = false;
     vector<Token> tokens;
-
     for (char c : operation) {
         if (isspace(c)) {
             if (!currentNumber.empty()) {
                 tokens.push_back({TokenType::NUMBER, currentNumber});
                 currentNumber.clear();
+                hasDecimalPoint = false;
             }
             continue;
-        } else if (isdigit(c)) {
+        } else if (isdigit(c) || c == '.' && !hasDecimalPoint) {
+            if (c == '.') {
+                hasDecimalPoint = true;
+            }
             currentNumber += c;
         } else {
             if (!currentNumber.empty()) {
                 tokens.push_back({TokenType::NUMBER, currentNumber});
                 currentNumber.clear();
+                hasDecimalPoint = false;
             }
             switch (c) {
             case '+':
@@ -170,17 +175,17 @@ bool Lexer::syntaxAnalyzer() {
     return true;
 }
 
-int Lexer::evalRPN(std::vector<Token> tokensInRPN) {
-    stack<int> rpnStack;
-    int result;
+double Lexer::evalRPN(std::vector<Token> tokensInRPN) {
+    stack<double> rpnStack;
+    double result;
 
     for (Token &t : tokensInRPN) {
         if (t.token == TokenType::NUMBER) {
-            rpnStack.push(stoi(t.value));
+            rpnStack.push(stod(t.value));
         } else {
-            int b = rpnStack.top();
+            double b = rpnStack.top();
             rpnStack.pop();
-            int a = rpnStack.top();
+            double a = rpnStack.top();
             rpnStack.pop();
 
             if (t.value == "+") {
@@ -200,11 +205,11 @@ int Lexer::evalRPN(std::vector<Token> tokensInRPN) {
             } else if (t.value == "^") {
                 result = pow(a, b);
             } else if (t.value == "%") {
-                result = a % b;
+                result = static_cast<int>(a) % static_cast<int>(b);
             }
             rpnStack.push(result);
         }
     }
-
+    cout << "Result is_: " << rpnStack.top() << endl;
     return rpnStack.top();
 }

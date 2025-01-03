@@ -47,7 +47,7 @@ class Lexer {
      *
      * @return result of arithmetic operation (as int)
      */
-    int evalRPN(std::vector<Token> tokensInRPN);
+    double evalRPN(std::vector<Token> tokensInRPN);
 
     /**
      * Converts infix operation to RPN  (Reverse Polish Notation)
