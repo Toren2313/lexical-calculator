@@ -205,11 +205,10 @@ double Lexer::evalRPN(std::vector<Token> tokensInRPN) {
             } else if (t.value == "^") {
                 result = pow(a, b);
             } else if (t.value == "%") {
-                result = static_cast<int>(a) % static_cast<int>(b);
+                result = (a / 100) * b;
             }
             rpnStack.push(result);
         }
     }
-    cout << "Result is_: " << rpnStack.top() << endl;
     return rpnStack.top();
 }
