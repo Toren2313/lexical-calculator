@@ -1,5 +1,12 @@
 #include "./lexer.h"
 #include "../../main.cpp"
+#include "../../viewModels/Types/enums.h"
+#include "../../viewModels/Types/structs.h"
+#include <cmath>
+#include <iomanip>
+#include <iostream>
+#include <stack>
+#include <stdexcept>
 
 using namespace std;
 
@@ -10,13 +17,18 @@ Lexer::Lexer(string operation, bool debugMode) {
 
     this->tokensRPN = inFixToRPN();
 
-    double r = this->evalRPN(this->tokensRPN);
+    long double r = this->evalRPN(this->tokensRPN);
 
     if (debugMode)
         this->printVector();
 
-    cout << "Result is: " << r << endl;
-};
+    if (fmod(r, 1.0) == 0.0) {
+        cout << static_cast<long long>(r) << endl;
+    } else {
+        cout << std::fixed << std::setprecision(10) << r << endl;
+    }
+}
+
 void Lexer::printVector() {
     for (Token &t : this->tokens) {
         cout << this->tokenTypeToString(t.token) + ": " << t.value << endl;
@@ -25,6 +37,7 @@ void Lexer::printVector() {
         cout << t.value << endl;
     }
 }
+
 string Lexer::tokenTypeToString(TokenType t) {
     switch (t) {
     case TokenType::_OPERATOR:
@@ -37,6 +50,7 @@ string Lexer::tokenTypeToString(TokenType t) {
         return "invalid";
     }
 }
+
 std::vector<Token> Lexer::tokenize(std::string operation) {
     std::string currentNumber;
     bool hasDecimalPoint = false;
@@ -68,11 +82,9 @@ std::vector<Token> Lexer::tokenize(std::string operation) {
             case '^':
             case '%':
             case '(':
-            case ')': {
+            case ')':
                 tokens.push_back({TokenType::_OPERATOR, std::string(1, c)});
                 break;
-            }
-
             case 'x':
 #ifdef _WIN32
                 system("cls");
@@ -84,7 +96,7 @@ std::vector<Token> Lexer::tokenize(std::string operation) {
 #endif
                 break;
             default:
-                break;
+                throw runtime_error("Invalid character in expression");
             }
         }
     }
@@ -154,7 +166,6 @@ bool Lexer::syntaxAnalyzer() {
             expectingNumber = true;
         } else if (t.value == ")") {
             if (stack.empty()) {
-                cout << "empty" << endl;
                 return false;
             }
             stack.pop();
