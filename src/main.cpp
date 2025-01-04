@@ -17,6 +17,6 @@ int main() {
         cout << ">> ";
         getline(cin, mOperation);
 
-        Lexer l(mOperation, true);
+        Lexer l(mOperation, false);
     }
 }

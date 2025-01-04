@@ -5,6 +5,7 @@
 #include <cmath>
 #include <iomanip>
 #include <iostream>
+#include <sstream>
 #include <stack>
 #include <stdexcept>
 
@@ -17,7 +18,7 @@ Lexer::Lexer(string operation, bool debugMode) {
 
     this->tokensRPN = inFixToRPN();
 
-    long double r = this->evalRPN(this->tokensRPN);
+    double r = this->evalRPN(this->tokensRPN);
 
     if (debugMode)
         this->printVector();
@@ -25,7 +26,16 @@ Lexer::Lexer(string operation, bool debugMode) {
     if (fmod(r, 1.0) == 0.0) {
         cout << static_cast<long long>(r) << endl;
     } else {
-        cout << std::fixed << std::setprecision(10) << r << endl;
+        ostringstream oss;
+        oss << fixed << setprecision(10) << r;
+        string result = oss.str();
+
+        result.erase(result.find_last_not_of('0') + 1, string::npos);
+        if (result.back() == '.') {
+            result.pop_back();
+        }
+
+        cout << result << endl;
     }
 }
 
